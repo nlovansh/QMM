@@ -1,0 +1,74 @@
+---
+title: "Assignment4 - Module 4 - Solve LP Model"
+author: "Nidhi Lovanshi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+**Load necessary Packages**
+
+```{r message=FALSE, warning=FALSE}
+library(lpSolveAPI)
+
+```
+
+**Reading lp file**
+
+```{r message=FALSE, warning=FALSE}
+# We have created a lp file which contains
+lp_model <-read.lp("qmm.lp")
+```
+
+**Displaying the lp object "lp_model"**
+```{r message=FALSE, warning=FALSE}
+print(lp_model)
+summary(lp_model)
+```
+
+**Solving the Linear programming model**
+```{r message=FALSE, warning=FALSE}
+solve(lp_model)
+```
+
+
+0 indicates this has ran successfully and there is an optimal solution 
+
+```{r}
+#Objective Function:
+get.objective(lp_model)
+```
+The objective function max Z is 420 x11 + 360 x12 + 300 x13 + 420 y11 + 360 y12 + 300 y13 + 420 z11 + 360 z12 + 300 z13
+
+Here, the optimal value for Z is $696000.
+
+
+```{r}
+#Variables:
+get.variables(lp_model)
+```
+
+The optimal value for each variables to obtain above optimal solution are:  
+x11 = 516.6667  
+x12 = 177.7778  
+x13 = 0.0000  
+y11 = 0.0000  
+y12 = 666.6667  
+y13 = 166.6667  
+z11 = 0.0000  
+z12 = 0.0000  
+z13 = 416.6667  
+
+1) Plant 1 should produce 516.67 large products and 177.78 medium products but no small products.
+2) Plant 2 should produce 0 large products,666.67 medium and 166.67 small products
+3) Plant 3 should produce 0 large products, 0 medium and 416.67 small products
+
+```{r}
+#Constraints:
+get.constraints(lp_model)
+```
+
+
+All the constraints value are satisfied 
+
+
+
+Conclusion, the optimal maximum profit Z is $696000 with all the above optimal variables values with all satisfied constraints. 
