@@ -47,7 +47,7 @@ Here, the optimal value for Z is $ 132790.
 #Variables:
 get.variables(lp_model)
 ```
- 0 60 40 80  0 30
+
 
 The optimal value for each variables to obtain above optimal solution are:  
 x11 = 0   
