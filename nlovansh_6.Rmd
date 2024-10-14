@@ -1,0 +1,76 @@
+---
+title: "Module 6 - The Transportation Model"
+author: "Nidhi Lovanshi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+  **Load necessary Packages**
+  
+```{r message=FALSE, warning=FALSE}
+library(lpSolveAPI)
+
+```
+
+**Reading lp file**
+  
+```{r message=FALSE, warning=FALSE}
+# We have created a lp file which contains
+lp_model <-read.lp("qmm2.lp")
+```
+
+**Displaying the lp object "lp_model"**
+```{r message=FALSE, warning=FALSE}
+print(lp_model)
+summary(lp_model)
+```
+
+**Solving the Linear programming model**
+```{r message=FALSE, warning=FALSE}
+solve(lp_model)
+```
+
+
+0 indicates this has ran successfully and there is an optimal solution 
+
+
+```{r}
+#Objective Function:
+get.objective(lp_model)
+```
+
+The objective function min Z is 600 x11 + 600 x12 + 600 x13 + 625 y11 + 625 y12 + 625 y13 + 22 x11 + 14 x12 + 30 x13 + 16 y11 + 20 y12 + 24 y13
+
+Here, the optimal value for Z is $ 132790.
+
+
+```{r}
+#Variables:
+get.variables(lp_model)
+```
+ 0 60 40 80  0 30
+
+The optimal value for each variables to obtain above optimal solution are:  
+x11 = 0   
+x12 = 60    
+x13 = 40   
+y11 = 80    
+y12 = 0    
+y13 = 30   
+
+1) No units are shipped from Plant A to Warehouse 1.
+2) 60 units are shipped from Plant A to Warehouse 2.
+3) 40 units are shipped from Plant A to Warehouse 3.
+4) 80 units are shipped from Plant B to Warehouse 1.
+5) No units are shipped from Plant B to Warehouse 2.
+6) 30 units are shipped from Plant B to Warehouse 3. 
+
+```{r}
+#Constraints:
+get.constraints(lp_model)
+```
+
+All the constraints value are satisfied 
+
+
+
+Conclusion, the optimal minimum cost Z is $ 132790 with all the above optimal variables values with all satisfied constraints. 
