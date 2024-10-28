@@ -1,0 +1,338 @@
+---
+title: "Module8 - DEA"
+author: "Nidhi Lovanshi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+***Load package***
+```{r message=FALSE, warning=FALSE}
+library(Benchmarking)
+```
+
+```{r message=FALSE, warning=FALSE}
+# Inputs: Staff Hours and Supplies per day
+input <- matrix(c(150, 400, 320, 520, 350, 320,0.2, 0.7, 1.2, 2.0, 1.2, 0.7), ncol = 2)
+
+# Outputs: Reimbursed Patient-Days and Privately Paid Patient-Days
+output <- matrix(c(14000, 14000, 42000, 28000, 19000, 14000,3500, 21000, 10500, 42000, 25000, 15000),ncol = 2)
+
+colnames(input) <- c("Staff hours per day","Supplies per day")
+colnames(output) <- c("Reimbursed Patient-Days","Privately Paid Patient-Days")
+input
+output
+
+```
+***Perform DEA analysis under all DEA assumptions of FDH***
+```{r}
+# DEA analysis under FDH
+#Free disposability hull
+dea_fdh <- dea(input, output, RTS = "fdh")
+
+dea_fdh
+
+#Peers
+peers(dea_fdh)
+
+#Lambda
+lambda(dea_fdh)
+
+dea.plot.frontier(input,output,RTS = "fdh")
+
+
+# Summarize results in a tabular format
+summary_fdh <- data.frame(
+  DMU = 1:6,
+  Efficiency_FDH = dea_fdh$eff,
+  Peers = dea_fdh$peer,
+  Lambda = apply(dea_fdh$lambda, 1, function(x) paste(round(x[x > 0], 3), collapse = ", "))
+)
+
+print(summary_fdh)
+
+```
+**Efficiency Scores**: Every DMU has been assigned an efficiency score of 1. In FDH, there are no inefficiencies in the relationship between the inputs and outputs being analyzed.  
+
+**Peers**: Each DMU recognizes itself as its own peer, they do not depend on other units for performance comparisons.  
+
+**Lambda**: All DMUs show a lambda value of 1, this implies that each DMU independently attains its efficiency rating without relying on other units.    
+
+Under the FDH assumption, each DMU operates independently in terms of efficiency, and does not require comparisons or references to other units.  
+
+
+***Perform DEA analysis under all DEA assumptions of CRS***
+```{r}
+# DEA analysis under CRS
+#Constant returns to scale
+dea_crs <- dea(input,output, RTS = "crs")
+
+dea_crs
+
+#Peers
+peers(dea_crs)
+
+#Lambda
+lambda(dea_crs)
+
+dea.plot.frontier(input,output,RTS = "crs")
+
+
+# Extracting efficiency scores
+efficiency_crs <- dea_crs$eff 
+
+# Extracting peers
+peers_crs <- apply(peers(dea_crs), 1, function(x) {
+  peers_string <- paste(na.omit(x), collapse = ", ")
+  return(peers_string)
+})
+
+# Extracting lambda values
+lambda_crs <- apply(lambda(dea_crs), 1, function(x) paste(round(x[x > 0], 3), collapse = ", "))
+
+# Summarize results in a tabular format
+summary_crs <- data.frame(
+  DMU = 1:6,
+  Efficiency_CRS = efficiency_crs,
+  Peers = peers_crs,
+  Lambda = lambda_crs)
+
+# Print the summary
+print(summary_crs)
+
+```
+**1. Efficiency Scores**   
+DMUs 1 to 4 achieve efficiency scores of 1, while DMUs 5 and 6 report scores below 1 (0.9775 and 0.8675 respectively), indicating areas of inefficiency.  
+
+**2. Peer**  
+DMUs 1 to 4 have no peers due to self-comparison, while DMUs 5 and 6 recognize DMUs 1, 2, and 4 as peers.  
+
+
+**3. Lambda**  
+DMUs 1 to 4 also have lambda values of 1, while DMUs 5 and 6 exhibit weighted contributions from their peers (e.g., DMU 5 shows contributions of 0.2, 0.08, and 0.538 from its peers).  
+
+
+
+***Perform DEA analysis under all DEA assumptions of VRS***
+```{r}
+# DEA analysis under VRS
+#Variable returns to scale
+dea_vrs <- dea(input,output, RTS = "vrs")
+
+dea_vrs
+
+#Peers
+peers(dea_vrs)
+
+#Lambda
+lambda(dea_vrs)
+
+dea.plot.frontier(input,output,RTS = "vrs")
+
+
+# Extracting efficiency scores
+efficiency_vrs <- dea_vrs$eff 
+
+# Extracting peers
+peers_vrs <- apply(peers(dea_vrs), 1, function(x) {
+  peers_string <- paste(na.omit(x), collapse = ", ")
+  return(peers_string)
+})
+
+# Extracting lambda values
+lambda_vrs <- apply(lambda(dea_vrs), 1, function(x) paste(round(x[x > 0], 3), collapse = ", "))
+
+# Summarize results in a tabular format
+summary_vrs <- data.frame(
+  DMU = 1:6,
+  Efficiency_VRS = efficiency_vrs,
+  Peers = peers_vrs,
+  Lambda = lambda_vrs)
+
+# Print the summary
+print(summary_vrs)
+```
+**1. Efficiency Scores**   
+DMUs 1 to 4 maintain efficiency scores of 1. However, DMU 6 demonstrates a marginally improved efficiency score of 0.8963.  
+
+
+**2. Peer**  
+DMUs 1 to 4 remain without peers, whereas DMUs 6 identify DMUs 1, 2, and 5 as peers.  
+
+
+**3. Lambda Values**  
+DMUs 1 to 4 have complete representation, while DMUs 6 report multiple contributions.  
+
+
+
+***Perform DEA analysis under all DEA assumptions of IRS***
+```{r}
+# DEA analysis under IRS
+#Increasing returns to scale
+dea_irs <- dea(input,output, RTS = "irs")
+
+dea_irs
+
+#Peers
+peers(dea_irs)
+
+#Lambda
+lambda(dea_irs)
+
+dea.plot.frontier(input,output,RTS = "irs")
+
+
+# Extracting efficiency scores
+efficiency_irs <- dea_irs$eff 
+
+# Extracting peers
+peers_irs <- apply(peers(dea_irs), 1, function(x) {
+  peers_string <- paste(na.omit(x), collapse = ", ")
+  return(peers_string)
+})
+
+# Extracting lambda values
+lambda_irs <- apply(lambda(dea_irs), 1, function(x) paste(round(x[x > 0], 3), collapse = ", "))
+
+# Summarize results in a tabular format
+summary_irs <- data.frame(
+  DMU = 1:6,
+  Efficiency_IRS = efficiency_irs,
+  Peers = peers_irs,
+  Lambda = lambda_irs)
+
+# Print the summary
+print(summary_irs)
+```
+
+***Perform DEA analysis under all DEA assumptions of DRS***
+```{r}
+# DEA analysis under DRS
+#Decreasing returns to scale
+dea_drs <- dea(input,output, RTS = "drs")
+
+dea_drs
+
+#Peers
+peers(dea_drs)
+
+#Lambda
+lambda(dea_drs)
+
+dea.plot.frontier(input,output,RTS = "drs")
+
+
+# Extracting efficiency scores
+efficiency_drs <- dea_drs$eff 
+
+# Extracting peers for each DMU
+peers_drs <- apply(peers(dea_drs), 1, function(x) {
+  peers_string <- paste(na.omit(x), collapse = ", ")
+  return(peers_string)
+})
+
+# Extracting lambda values
+lambda_drs <- apply(lambda(dea_drs), 1, function(x) paste(round(x[x > 0], 3), collapse = ", "))
+
+# Summarize results in a tabular format
+summary_drs <- data.frame(
+  DMU = 1:6,
+  Efficiency_DRS = efficiency_drs,
+  Peers = peers_drs,
+  Lambda = lambda_drs)
+
+# Print the summary
+print(summary_drs)
+```
+
+***Perform DEA analysis under all DEA assumptions of FRH***
+```{r}
+# DEA analysis under FRH
+#Additivity (scaling up and down, but only with integers), and free disposability; also known af replicability and free disposability, the free disposability and replicability hull (frh)
+dea_frh <- dea(input,output, RTS = "add")
+
+dea_frh
+#Peers
+peers(dea_frh)
+
+#Lambda
+lambda(dea_frh)
+
+dea.plot.frontier(input,output,RTS = "add")
+
+
+# Extracting efficiency scores
+efficiency_frh <- dea_frh$eff 
+
+# Extracting peers for each DMU
+peers_frh <- apply(peers(dea_frh), 1, function(x) {
+  peers_string <- paste(na.omit(x), collapse = ", ")
+  return(peers_string)
+})
+
+# Extracting lambda values
+lambda_frh <- apply(lambda(dea_frh), 1, function(x) paste(round(x[x > 0], 3), collapse = ", "))
+
+# Summarize results in a tabular format
+summary_frh <- data.frame(
+  DMU = 1:6,
+  Efficiency_FRH = efficiency_frh,
+  Peers = peers_frh,
+  Lambda = lambda_frh)
+
+# Print the summary
+print(summary_frh)
+```
+
+***Detailed Comparison***  
+
+**1. Efficiency Scores**   
+**FDH**: All DMUs from 1 to 6 have an efficiency score of 1, which signifies that they are all performing efficiently in comparison to one another.  
+
+**CRS**: DMUs 1 to 4 achieve efficiency scores of 1, while DMUs 5 and 6 report scores below 1 (0.9775 and 0.8675 respectively), indicating areas of inefficiency.  
+
+**VRS**: Like CRS, DMUs 1 to 4 maintain efficiency scores of 1. However, DMU 6 demonstrates a marginally improved efficiency score of 0.8963.  
+
+**IRS**: This result is consistent with VRS, where DMUs 1 to 4 are efficient, and DMUs 5 and 6 show slightly lower efficiency levels.  
+
+**DRS**: The findings align with those from CRS, showing DMUs 5 and 6 as inefficient.  
+
+**FRH**: Similar to FDH, once again, all DMUs achieve a score of 1, reflecting peak efficiency. 
+
+In all analysis, DMUs 1-4 show consistent efficiency. And DMUs 5 and 6 exhibit inefficiencies when evaluated under CRS, DRS, and marginally under IRS.
+
+**2. Peer Analysis**  
+
+**FDH**: In this analysis, each DMU acts as its own peer.  
+
+**CRS**: DMUs 1 to 4 have no peers due to self-comparison, while DMUs 5 and 6 recognize DMUs 1, 2, and 4 as peers.  
+
+**VRS and IRS**: Similar to CRS, DMUs 1 to 4 remain without peers, whereas DMUs 5 and 6 identify DMUs 1, 2, and 5 as peers.  
+
+**DRS**: The peer relationships are consistent with CRS, suggesting that DMUs 1 to 4 exhibit strong performance consistently.  
+
+**FRH**: Similar to FDH, each DMU considers itself as its own peer, which results in all units receiving a score of 1.  
+
+In all analysis, FDH and FRH, each unit is considered a self-peer, whereas in CRS, VRS, IRS, and DRS, units share common peers.
+
+**3. Lambda Values**  
+
+**FDH**: All lambda values equal 1, indicating that each DMU is completely represented by itself as a peer.  
+
+**CRS**: DMUs 1 to 4 also have lambda values of 1, while DMUs 5 and 6 exhibit weighted contributions from their peers (e.g., DMU 5 shows contributions of 0.2, 0.08, and 0.538 from its peers).  
+
+**VRS and IRS**: Similar with CRS, DMUs 1 to 4 have complete representation, while DMUs 5 and 6 report multiple contributions.  
+
+**DRS**: The results remain consistent with those of CRS, with DMUs 5 and 6 reflecting peer contributions.  
+
+**FRH**: Similar to FDH, all lambda values equal 1, indicating that each DMU is completely represented by itself as a peer.
+
+
+In all analysis, the lambda values in CRS, VRS, IRS, and DRS highlight the role of peers in determining the efficiency scores of DMUs 5 and 6. This underscores the significance of peer performance in these evaluations. On the other hand, the results from the FRH and FDH model indicate that all DMUs attain their optimal performance based solely on their own efficiency, independent of peers.
