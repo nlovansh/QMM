@@ -1,0 +1,125 @@
+---
+title: "QA_Module11"
+author: "Nidhi Lovanshi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***Load Package***
+```{r}
+library(lpSolveAPI)
+```
+
+***Create a model***
+```{r}
+
+# Creating a model with 7 variables
+model <- make.lp(0, 7)  
+
+```
+
+***Objective function coefficients***
+```{r}
+# Set the objective function coefficients
+# Objective: minimize total wage
+set.objfn(model, c(775, 800, 800, 800, 800, 775, 750))
+
+# Required number of workers per day
+workers_required <- c(18, 27, 22, 26, 25, 21, 19)
+
+
+```
+
+***Constraints***
+
+```{r message=FALSE, warning=FALSE}
+# Add constraints for each day of the week (corrected coefficients)
+
+# Sunday: Shifts 2, 3, 4, 5, 6 are available
+add.constraint(model, c(0, 1, 1, 1, 1, 1, 0), ">=", workers_required[1])
+
+# Monday: Shifts 3, 4, 5, 6, 7 are available
+add.constraint(model, c(0, 0, 1, 1, 1, 1, 1), ">=", workers_required[2])  
+
+# Tuesday: Shifts 1, 4, 5, 6, 7 are available
+add.constraint(model, c(1, 0, 0, 1, 1, 1, 1), ">=", workers_required[3])  
+
+# Wednesday: Shifts 1, 2, 5, 6, 7 are available
+add.constraint(model, c(1, 1, 0, 0, 1, 1, 1), ">=", workers_required[4])  
+
+# Thursday: Shifts 1, 2, 3, 6, 7 are available
+add.constraint(model, c(1, 1, 0, 0, 1, 1, 1), ">=", workers_required[5])  
+
+# Friday: Shifts 1, 2, 3, 4, 7 are available
+add.constraint(model, c(1, 1, 1, 1, 0, 0, 1), ">=", workers_required[6])  
+
+# Saturday: Shifts 1, 2, 3, 5 are available
+add.constraint(model, c(1, 1, 1, 0, 1, 0, 0), ">=", workers_required[7])  
+
+# Set all variables to be integer
+set.type(model, 1:7, "integer")
+
+# # Set the problem to maximize minimize
+lp.control(model, sense = "min")
+
+# Solve the model
+solve(model)
+```
+
+***Objective and Decision variables value***
+```{r}
+# Get the results
+solution <- get.variables(model)
+obj_value <- get.objective(model)
+```
+
+***Print the results***
+```{r}
+# Print the results
+cat("Optimal solution found\n")
+cat("Total cost: $", obj_value, "\n")
+```
+The optimal solution minimizes the total wage cost to $24,175
+```{r}
+cat("\nNumber of workers for each shift:\n")
+for (i in 1:7) {
+  cat("Shift", i, ":", solution[i],"workers", "\n")
+}
+
+```
+Given the shifts and their days off, the distribution of workers among the seven shifts is as follows:
+
+Shift 1 (Sunday and Monday): 1 workers  
+Shift 2 (Monday and Tuesday): 3 workers  
+Shift 3 (Tuesday and Wednesday): 5 workers   
+Shift 4 (Wednesday and Thursday): 0 workers   
+Shift 5 (Thursday and Friday): 10 workers  
+Shift 6 (Friday and Saturday): 0 workers   
+Shift 7 (Saturday and Sunday): 12 workers  
+
+```{r}
+# Calculating and printing workers available each day
+days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+
+workers_available <- c(
+  sum(solution[c(2, 3, 4, 5, 6)]),  # Sunday: Shifts 2, 3, 4, 5, 6 are available
+  sum(solution[c(3, 4, 5, 6, 7)]),  # Monday: Shifts 3, 4, 5, 6, 7 are available
+  sum(solution[c(1, 4, 5, 6, 7)]),  # Tuesday: Shifts 1, 4, 5, 6, 7 are available
+  sum(solution[c(1, 2, 5, 6, 7)]),  # Wednesday: Shifts 1, 2, 5, 6, 7 are available
+  sum(solution[c(1, 2, 3, 6, 7)]),  # Thursday: Shifts 1, 2, 3, 6, 7 are available
+  sum(solution[c(1, 2, 3, 4, 7)]),  # Friday: Shifts 1, 2, 3, 4, 7 are available
+  sum(solution[c(1, 2, 3, 5)])      # Saturday: Shifts 1, 2, 3, 5 are available
+)
+
+# Print the available workers for each day
+cat("\nWorkers available each day:\n")
+for (i in 1:7) {
+  cat(days[i], ": ", workers_available[i],  "\n", sep="")
+}
+
+```
+
