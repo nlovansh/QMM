@@ -1,0 +1,174 @@
+---
+title: "QMM_FINAL"
+author: "Nidhi Lovanshi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***Load necessary Packages***
+```{r}
+# Load library
+library(lpSolveAPI)
+
+```
+
+***Generating Data***
+```{r}
+# Setting random seed for reproducibility
+set.seed(123)
+
+# Generating Dataset containing Student IDs, GPA, Skill Relevance and Leadership scores
+data <- data.frame(
+  ID = seq(1, 12), 
+  GPA = runif(12, min = 2.0, max = 4.0),  
+  SkillRelevance = runif(12, min = 0, max = 10), 
+  Leadership = runif(12, min = 0, max = 10)  
+)
+
+```
+A data frame is generated containing random information for 12 students.  
+This includes their:  
+ID: A unique number assigned to each student.  
+GPA: Randomly assigned GPA scores ranging from 2.0 to 4.0.  
+SkillRelevance: Random scores that indicate how relevant their skills are, on a scale from 0 to 10.  
+Leadership: Random scores that reflect their leadership qualities, also on a scale from 0 to 10.  
+
+***Assign weights***
+```{r}
+# Assigning weights to the factors contributing to success
+weight_gpa <- 0.4
+weight_skill <- 0.3
+weight_leadership <- 0.3
+```
+These weights represent a careful strategy to maximize the group's performance, making sure that each member plays a unique role in the overall success.  
+
+The reason for these weights is that GPA is considered more important, so it gets a higher weight of 0.4. On the other hand, Skill Relevance and Leadership are seen as equally important, so they both have a weight of 0.3.
+
+
+
+***Student Success Score***
+```{r}
+#Computing each student's success score
+data$SuccessScore <- with(data, weight_gpa * GPA + weight_skill * SkillRelevance + weight_leadership * Leadership)
+
+```
+
+Calculating a combined score (SuccessScore) for every student by merging their GPA, SkillRelevance, and Leadership scores, with each factor given a specific weight based on its significance.
+
+
+***Configure the Linear Programming Model***
+```{r}
+#Parameters
+total_students <- nrow(data)  
+total_groups <- 4  
+group_size <- 3  
+```
+Parameters: 
+
+Total number of students (total_students) is 12.  
+Total number of groups(total_groups) is 4.   
+Number of students in each group(group_size) is 3.
+```{r}
+# Initializing the linear programming model
+lp_model <- make.lp(0, total_students * total_groups)
+
+# Defining the objective function
+#The goal is to maximize the total SuccessScore across all groups.
+objective <- rep(data$SuccessScore, times = total_groups)
+set.objfn(lp_model, objective)
+
+# Constraint : Each student should be assigned to one and only one group
+# A loop goes through every student and sets a rule for their assignment.
+
+for (student in 1:total_students) {
+  constraint <- numeric(total_students * total_groups)
+  for (group in 1:total_groups) {
+    constraint[(group - 1) * total_students + student] <- 1
+  }
+  add.constraint(lp_model, constraint, "=", 1)
+}
+
+# Constraint : Each group should have exactly 3 members
+# A loop goes through each group and sets a rule that the total number of students assigned to that group must be 3.
+
+for (group in 1:total_groups) {
+  constraint <- numeric(total_students * total_groups)
+  group_indices <- ((group - 1) * total_students + 1):(group * total_students)
+  constraint[group_indices] <- 1
+  add.constraint(lp_model, constraint, "=", group_size)
+}
+
+# Specifying that all decision variables are binary
+set.type(lp_model, columns = 1:(total_students * total_groups), type = "binary")
+```
+Each variable represents whether a student is assigned to a group (1) or not (0).  
+
+
+
+***Solving the Linear programming model***
+```{r}
+solve(lp_model)
+
+```
+0 indicates this has ran successfully and there is an optimal solution
+
+
+***Results and validation***
+```{r}
+#Variables:
+variables <- get.variables(lp_model)
+student_matrix <- matrix(variables, nrow = total_students, ncol = total_groups)
+
+# Output results
+cat("Assignment Matrix:\n")
+print(student_matrix)
+```
+Each row represent a student (1 to 12). 
+Each column represent a group (1 to 4).  
+
+
+Column 1: Students 4, 8, 9 is assigned to Group 1.   
+Column 2: Students 6, 10, 12 is assigned to Group 2.   
+Column 3: Students 1, 2, 7 is assigned to Group 3.    
+Column 4: Students 3, 5, 11 is assigned to Group 4.  
+
+```{r}
+# Verifying group sizes
+group_sizes <- colSums(student_matrix)
+cat("Group Sizes: ", group_sizes, "\n")
+
+```
+
+This confirms that each group contains exactly 3 students, satisfying the constraint.
+
+```{r}
+# Verifying each student is assigned to exactly one group
+student_assignments <- rowSums(student_matrix)
+cat("Student Assignments: ", student_assignments, "\n")
+```
+This confirms that every student is assigned to exactly one group, satisfying the constraint.
+
+
+```{r}
+# Determining which students are in each group
+group_assignments <- lapply(1:total_groups, function(group) {
+  which(student_matrix[, group] == 1)
+})
+
+# Displaying the group assignments and optimal success score
+cat("Optimal Group Assignments:\n")
+for (group in 1:total_groups) {
+  cat(sprintf("Group %d: %s\n", group, paste(group_assignments[[group]], collapse = ", ")))
+}
+cat("\nOptimal Success Score: ", get.objective(lp_model), "\n")
+```
+
+The maximum total success score for the group assignments Z is 56.85392.  
+
+The solution satisfies all constraints:
+Each group contains exactly 3 students.
+Each student is assigned to only one group.
